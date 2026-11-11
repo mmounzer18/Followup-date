@@ -85,7 +85,6 @@
             line-height: 1.5;
         }
 
-        /* Elements for Screen 1 */
         .slider-container {
             width: 100%;
             margin: 20px 0;
@@ -131,7 +130,6 @@
             margin-bottom: 16px;
         }
 
-        /* Buttons */
         .btn {
             background-color: var(--accent-color);
             color: white;
@@ -153,7 +151,6 @@
             transform: scale(0.98);
         }
 
-        /* Screen 2 Layout */
         .button-arena {
             position: relative;
             width: 100%;
@@ -182,7 +179,6 @@
             left: 25%;
         }
 
-        /* Screen 3 Layout */
         .options-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -234,10 +230,7 @@
     </style>
 </head>
 <body>
-
     <div class="container" id="widget-container">
-        
-        <!-- SCREEN 1: SLIDER -->
         <div class="screen active" id="screen-1">
             <h2>Rate Our First Date</h2>
             <p>Please provide honest clinical feedback regarding your experience.</p>
@@ -251,8 +244,6 @@
             </div>
             <button class="btn" id="confirm-slider-btn">Submit Rating</button>
         </div>
-
-        <!-- SCREEN 1 CONFIRMATION (THE GASLIGHT) -->
         <div class="screen" id="screen-1-confirm">
             <div class="live-score">10/10</div>
             <h2>YAY ME TOO!</h2>
@@ -260,7 +251,6 @@
             <button class="btn" id="to-screen-2-btn">Continue</button>
         </div>
 
-        <!-- SCREEN 2: EVASIVE BUTTON -->
         <div class="screen" id="screen-2">
             <h2>Go out with me again?</h2>
             <p>Select your preferred response framework to proceed.</p>
@@ -270,11 +260,9 @@
             </div>
         </div>
 
-        <!-- SCREEN 3: ACTIVITY OPTIONS -->
         <div class="screen" id="screen-3">
             <h2>Select Itinerary Elements</h2>
             <p>Pick an activity and a food option for the agenda.</p>
-            
             <div class="options-grid">
                 <div class="option-card" data-type="activity" data-value="Volleyball">
                     <span class="option-icon">🏐</span>
@@ -305,17 +293,104 @@
                     <span class="option-label">Shawarma</span>
                 </div>
             </div>
-
             <button class="btn" id="submit-itinerary-btn">Lock In Choices</button>
         </div>
 
-        <!-- SCREEN 4: RANDOM THANK YOU -->
         <div class="screen" id="screen-4">
             <div class="live-score">🎉</div>
             <h2>System Protocols Complete!</h2>
             <p id="final-summary">Processing itinerary configuration...</p>
             <p style="font-size: 13px; margin-top: 10px;">Random thank you for not finding a loophole past the 'No' button.</p>
         </div>
-
     </div>
 
+    <script>
+        const selectedOptions = new Set();
+        const slider = document.getElementById('enjoyment-slider');
+        const scoreDisplay = document.getElementById('score-display');
+        const confirmSliderBtn = document.getElementById('confirm-slider-btn');
+        const toScreen2Btn = document.getElementById('to-screen-2-btn');
+        const btnNo = document.getElementById('btn-no');
+        const btnYes = document.getElementById('btn-yes');
+        const arena = document.getElementById('arena');
+        const container = document.getElementById('widget-container');
+
+        slider.addEventListener('input', (e) => {
+            scoreDisplay.textContent = e.target.value;
+        });
+
+        confirmSliderBtn.addEventListener('click', () => {
+            document.getElementById('screen-1').classList.remove('active');
+            document.getElementById('screen-1-confirm').classList.add('active');
+        });
+
+        toScreen2Btn.addEventListener('click', () => {
+            nextScreen(2);
+        });
+
+        function nextScreen(screenNum) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(`screen-${screenNum}`).classList.add('active');
+            if(screenNum === 2) { initEvasiveButton(); }
+        }
+
+        function initEvasiveButton() {
+            const arenaRect = arena.getBoundingClientRect();
+            const handleRepel = (e) => {
+                const noRect = btnNo.getBoundingClientRect();
+                const containerRect = container.getBoundingClientRect();
+                let clientX = e.clientX; let clientY = e.clientY;
+                if (e.touches && e.touches.length > 0) {
+                    clientX = e.touches[0].clientX; clientY = e.touches[0].clientY;
+                }
+                const noCenterX = noRect.left + noRect.width / 2;
+                const noCenterY = noRect.top + noRect.height / 2;
+                const deltaX = noCenterX - clientX; const deltaY = noCenterY - clientY;
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                const repelRadius = 100;
+                if (distance < repelRadius) {
+                    const force = (repelRadius - distance) / repelRadius;
+                    const moveSpeed = 22;
+                    let moveX = (deltaX / (distance || 1)) * force * moveSpeed;
+                    let moveY = (deltaY / (distance || 1)) * force * moveSpeed;
+                    let targetLeft = noRect.left + moveX; let targetTop = noRect.top + moveY;
+                    const pad = 20;
+                    const minX = containerRect.left + pad; const maxX = containerRect.right - noRect.width - pad;
+                    const minY = containerRect.top + pad; const maxY = containerRect.bottom - noRect.height - pad;
+                    if (targetLeft < minX) targetLeft = minX + 5;
+                    if (targetLeft > maxX) targetLeft = maxX - 5;
+                    if (targetTop < minY) targetTop = minY + 5;
+                    if (targetTop > maxY) targetTop = maxY - 5;
+                    const finalLeft = targetLeft - arenaRect.left; const finalTop = targetTop - arenaRect.top;
+                    btnNo.style.left = `${finalLeft}px`; btnNo.style.top = `${finalTop}px`;
+                }
+            };
+            window.removeEventListener('mousemove', handleRepel);
+            window.addEventListener('mousemove', handleRepel);
+            window.addEventListener('touchmove', handleRepel, { passive: true });
+        }
+
+        btnYes.addEventListener('click', () => { nextScreen(3); });
+
+        document.querySelectorAll('.option-card').forEach(card => {
+            card.addEventListener('click', () => {
+                card.classList.toggle('selected');
+                const val = card.getAttribute('data-value');
+                if (selectedOptions.has(val)) { selectedOptions.delete(val); } 
+                else { selectedOptions.add(val); }
+            });
+        });
+
+        document.getElementById('submit-itinerary-btn').addEventListener('click', () => {
+            const chosen = Array.from(selectedOptions);
+            const summaryText = document.getElementById('final-summary');
+            if (chosen.length === 0) {
+                summaryText.innerHTML = "You didn't pick anything, but that's fine—we are going to do <span class='custom-label-highlight'>everything</span> anyway.";
+            } else {
+                summaryText.innerHTML = `Our upcoming date agenda is officially locked in with: <br><span class='custom-label-highlight'>${chosen.join(', ')}</span>!`;
+            }
+            nextScreen(4);
+        });
+    </script>
+</body>
+</html>
