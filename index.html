@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post-Date Evaluation Protocols</title>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #131a2c;
+            --accent-color: #3b82f6;
+            --accent-hover: #2563eb;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border-color: #1e293b;
+            --danger-color: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            position: relative;
+            min-height: 380px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .screen {
+            display: none;
+            width: 100%;
+            animation: fadeIn 0.4s ease forwards;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            font-size: 24px;
+            margin-bottom: 12px;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        p {
+            color: var(--text-muted);
+            font-size: 15px;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        /* Elements for Screen 1 */
+        .slider-container {
+            width: 100%;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: var(--border-color);
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 10px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .live-score {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 16px;
+        }
+
+        /* Buttons */
+        .btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Screen 2 Layout */
+        .button-arena {
+            position: relative;
+            width: 100%;
+            height: 150px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        #btn-no {
+            background-color: var(--danger-color);
+            position: absolute;
+            z-index: 10;
+            margin-top: 0;
+            transition: left 0.1s ease-out, top 0.1s ease-out;
+            touch-action: none;
+        }
+
+        #btn-yes {
+            position: absolute;
+            z-index: 5;
+            margin-top: 0;
+        }
+
+        /* Screen 3 Layout */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .option-card {
+            background-color: #1a233d;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .option-card:hover {
+            border-color: var(--accent-color);
+            background-color: #1e294a;
+        }
+
+        .option-card.selected {
+            border-color: var(--accent-color);
+            background-color: rgba(59, 130, 246, 0.15);
+            box-shadow: 0 0 12px rgba(59, 130, 246, 0.2);
+        }
+
+        .option-icon {
+            font-size: 24px;
+        }
+
+        .option-label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .custom-label-highlight {
+            color: #10b981;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="widget-container">
+        
+        <!-- SCREEN 1: SLIDER -->
+        <div class="screen active" id="screen-1">
+            <h2>Rate Our First Date</h2>
+            <p>Please provide honest clinical feedback regarding your experience.</p>
+            <div class="live-score" id="score-display">5</div>
+            <div class="slider-container">
+                <input type="range" id="enjoyment-slider" min="1" max="10" value="5">
+                <div class="slider-labels">
+                    <span>1 (Terrible)</span>
+                    <span>10 (Perfect)</span>
+                </div>
+            </div>
+            <button class="btn" id="confirm-slider-btn">Submit Rating</button>
+        </div>
+
+        <!-- SCREEN 1 CONFIRMATION (THE GASLIGHT) -->
+        <div class="screen" id="screen-1-confirm">
+            <div class="live-score">10/10</div>
+            <h2>YAY ME TOO!</h2>
+            <p>Thank you for submitting a perfect score. Your calibration metrics match our database exactly.</p>
+            <button class="btn" onclick="nextScreen(2)">Continue</button>
+        </div>
+
+        <!-- SCREEN 2: EVASIVE BUTTON -->
+        <div class="screen" id="screen-2">
+            <h2>Go out with me again?</h2>
+            <p>Select your preferred response framework to proceed.</p>
+            <div class="button-arena" id="arena">
+                <button class="btn" id="btn-yes">Yes</button>
+                <button class="btn" id="btn-no">No</button>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: ACTIVITY OPTIONS -->
+        <div class="screen" id="screen-3">
+            <h2>Select Itinerary Elements</h2>
+            <p>Pick an activity and a food option for the agenda.</p>
+            
+            <div class="options-grid">
+                <div class="option-card" data-type="activity" data-value="Volleyball">
+                    <span class="option-icon">🏐</span>
+                    <span class="option-label">Volleyball</span>
+                </div>
+                <div class="option-card" data-type="food" data-value="Boba">
+                    <span class="option-icon">🧋</span>
+                    <span class="option-label">Boba</span>
+                </div>
+                <div class="option-card" data-type="food" data-value="Japanese">
+                    <span class="option-icon">🍣</span>
+                    <span class="option-label">Japanese</span>
+                </div>
+                <div class="option-card" data-type="food" data-value="Korean">
+                    <span class="option-icon">🍗</span>
+                    <span class="option-label">Korean</span>
+                </div>
+                <div class="option-card" data-type="food" data-value="Chinese">
+                    <span class="option-icon">🥡</span>
+                    <span class="option-label">Chinese</span>
+                </div>
+                <div class="option-card" data-type="food" data-value="Italian">
+                    <span class="option-icon">🍝</span>
+                    <span class="option-label">Italian</span>
+                </div>
+                <div class="option-card" data-type="food" data-value="Shawarma">
+                    <span class="option-icon">🌯</span>
+                    <span class="option-label">Shawarma</span>
+                </div>
+            </div>
+
+            <button class="btn" id="submit-itinerary-btn">Lock In Choices</button>
+        </div>
+
+        <!-- SCREEN 4: RANDOM THANK YOU -->
+        <div class="screen" id="screen-4">
+            <div class="live-score">🎉</div>
+            <h2>System Protocols Complete!</h2>
+            <p id="final-summary">Processing itinerary configuration...</p>
+            <p style="font-size: 13px; margin-top: 10px;">Random thank you for not finding a loophole past the 'No' button.</p>
+        </div>
+
+    </div>
+
+    <script>
+        // State Management
+        let currentScreen = 1;
+        const selectedOptions = new Set();
+
+        // DOM elements
